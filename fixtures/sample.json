@@ -1,0 +1,13 @@
+{
+  "manifest": {
+    "name": "sample-skill",
+    "version": "0.1.0",
+    "description": "Fixture skill"
+  },
+  "files": [
+    "SKILL.md",
+    "examples/basic.md",
+    "tests/basic.test.md",
+    "skill.json"
+  ]
+}

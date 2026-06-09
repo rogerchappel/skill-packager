@@ -1,0 +1,3 @@
+# Test
+
+Expected: package validates.
