@@ -37,3 +37,7 @@ npm run package:smoke
 npm run release:check
 bash scripts/validate.sh
 ```
+
+## Release Package Contents
+
+`npm run package:smoke` verifies that the package includes the CLI, source modules, validation scripts, docs, examples, fixtures, and maintainer policy files while excluding development-only build output.
