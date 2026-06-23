@@ -28,7 +28,7 @@
     "check": "node --check src/*.js bin/cli.js tests/*.test.js",
     "build": "node scripts/build.js",
     "smoke": "node bin/cli.js --help && node scripts/smoke.js",
-    "package:smoke": "npm pack --dry-run",
+    "package:smoke": "node scripts/package-smoke.js",
     "release:check": "npm test && npm run check && npm run build && npm run smoke && npm run package:smoke"
   },
   "keywords": [
