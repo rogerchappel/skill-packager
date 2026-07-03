@@ -29,7 +29,8 @@
     "build": "node scripts/build.js",
     "smoke": "node bin/cli.js --help && node scripts/smoke.js",
     "package:smoke": "node scripts/package-smoke.js",
-    "release:check": "npm test && npm run check && npm run build && npm run smoke && npm run package:smoke"
+    "release:check": "npm test && npm run check && npm run build && npm run smoke && npm run package:smoke",
+    "lint": "npm run check"
   },
   "keywords": [
     "agent-skill",
