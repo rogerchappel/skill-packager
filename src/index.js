@@ -16,6 +16,12 @@ export function scaffoldSkill(dir, name = "my-skill") {
 export function validateSkill(dir) {
   const missing = requiredFiles.filter((file) => !existsSync(join(dir, file)));
   const skillText = existsSync(join(dir, "SKILL.md")) ? readFileSync(join(dir, "SKILL.md"), "utf8") : "";
-  const hasApproval = /approval|required|permission/i.test(skillText);
+  const approvalStatements = skillText
+    .split(/\r?\n/)
+    .filter((line) => /approval|permission/i.test(line));
+  const hasApproval = approvalStatements.some(
+    (line) => /(?:approval|permission).{0,40}\brequir(?:e|es|ed|ing)\b|\brequir(?:e|es|ed|ing)\b.{0,40}(?:approval|permission)/i.test(line)
+      && !/\b(?:no|not|never|without)\b.{0,30}(?:approval|permission)|(?:approval|permission).{0,30}\b(?:not|never)\s+required\b/i.test(line),
+  );
   return { ok: missing.length === 0 && hasApproval, missing, warnings: hasApproval ? [] : ["SKILL.md should describe approval requirements"] };
 }
