@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { scaffoldSkill, validateSkill } from "../src/index.js";
@@ -19,6 +19,42 @@ test("scaffold creates a valid skill", () => {
   const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
   try { assert.equal(scaffoldSkill(dir, "demo-skill").ok, true); }
   finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("scaffold refuses to overwrite a complete package by default", () => {
+  const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
+  try {
+    scaffoldSkill(dir, "original");
+    const original = readFileSync(join(dir, "SKILL.md"), "utf8");
+    assert.throws(() => scaffoldSkill(dir, "replacement"), /refusing to overwrite.*SKILL\.md/);
+    assert.equal(readFileSync(join(dir, "SKILL.md"), "utf8"), original);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("scaffold refuses a partially existing package without creating other files", () => {
+  const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
+  try {
+    mkdirSync(join(dir, "examples"));
+    writeFileSync(join(dir, "examples/basic.md"), "keep me\n");
+    assert.throws(() => scaffoldSkill(dir, "demo"), /examples\/basic\.md/);
+    assert.equal(readFileSync(join(dir, "examples/basic.md"), "utf8"), "keep me\n");
+    assert.equal(validateSkill(dir).missing.length, 3);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("scaffold overwrites package files only with force enabled", () => {
+  const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
+  try {
+    scaffoldSkill(dir, "original");
+    assert.equal(scaffoldSkill(dir, "replacement", { force: true }).ok, true);
+    assert.match(readFileSync(join(dir, "SKILL.md"), "utf8"), /^# replacement$/m);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("negated approval language does not satisfy the safety requirement", () => {

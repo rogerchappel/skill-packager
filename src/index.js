@@ -3,7 +3,12 @@ import { join } from "node:path";
 
 export const requiredFiles = ["SKILL.md", "skill.json", "examples/basic.md", "tests/basic.test.md"];
 
-export function scaffoldSkill(dir, name = "my-skill") {
+export function scaffoldSkill(dir, name = "my-skill", { force = false } = {}) {
+  const existing = requiredFiles.filter((file) => existsSync(join(dir, file)));
+  if (existing.length > 0 && !force) {
+    throw new Error(`refusing to overwrite existing scaffold files: ${existing.join(", ")}; pass force: true to overwrite`);
+  }
+
   mkdirSync(join(dir, "examples"), { recursive: true });
   mkdirSync(join(dir, "tests"), { recursive: true });
   writeFileSync(join(dir, "SKILL.md"), `# ${name}\n\nUse when a local agent workflow needs this capability.\n\nApproval is required before external actions.\n`);
