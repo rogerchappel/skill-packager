@@ -1,14 +1,43 @@
 #!/usr/bin/env node
 import { scaffoldSkill, validateSkill } from "../src/index.js";
 import { requireLocalPath } from "../src/safety.js";
+
+const usage = "Usage: skill-packager <init|check> <dir> [--name my-skill] [--force]";
 const args = process.argv.slice(2);
-if (args.includes("--help") || args.length === 0) {
-  console.log("Usage: skill-packager <init|check> <dir> [--name my-skill]");
+if (args.includes("--help")) {
+  console.log(usage);
   process.exit(0);
 }
-const cmd = args[0];
-const dir = requireLocalPath(args[1], "skill directory");
-const get = (flag, fallback = "") => args.includes(flag) ? args[args.indexOf(flag) + 1] : fallback;
-const result = cmd === "init" ? scaffoldSkill(dir, get("--name", "my-skill")) : validateSkill(dir);
-console.log(JSON.stringify(result, null, 2));
-if (!result.ok) process.exitCode = 1;
+
+try {
+  const [cmd, dirArg, ...options] = args;
+  if (!["init", "check"].includes(cmd)) {
+    throw new Error(cmd ? `unknown command: ${cmd}` : "command is required");
+  }
+  const dir = requireLocalPath(dirArg, "skill directory");
+  if (cmd === "check" && options.length > 0) {
+    throw new Error(`check does not accept options: ${options.join(" ")}`);
+  }
+
+  let name = "my-skill";
+  let force = false;
+  for (let index = 0; index < options.length; index += 1) {
+    const option = options[index];
+    if (option === "--force") {
+      force = true;
+    } else if (option === "--name" && options[index + 1] && !options[index + 1].startsWith("--")) {
+      name = options[index + 1];
+      index += 1;
+    } else {
+      throw new Error(option === "--name" ? "--name requires a value" : `unknown option: ${option}`);
+    }
+  }
+
+  const result = cmd === "init" ? scaffoldSkill(dir, name, { force }) : validateSkill(dir);
+  console.log(JSON.stringify(result, null, 2));
+  if (!result.ok) process.exitCode = 1;
+} catch (error) {
+  console.error(`Error: ${error.message}`);
+  console.error(usage);
+  process.exitCode = 1;
+}
