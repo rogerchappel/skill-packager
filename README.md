@@ -8,6 +8,8 @@ Scaffold and validate reusable agent skill packages.
 npm test
 npm run smoke
 skill-packager --help
+skill-packager init ./my-skill --name my-skill
+skill-packager check ./my-skill
 ```
 
 ## What It Does
@@ -15,6 +17,14 @@ skill-packager --help
 Package agent skills with manifests, examples, tests, and docs so they are reusable instead of loose prompt snippets.
 
 The package is local-first: it reads fixtures or project files and emits deterministic JSON/Markdown output. It does not publish, post, sync, or write to external accounts.
+
+`init` will not overwrite any existing scaffold file. If you intentionally want to replace the generated files in an existing package, pass `--force`:
+
+```bash
+skill-packager init ./my-skill --name my-skill --force
+```
+
+Only `SKILL.md`, `skill.json`, `examples/basic.md`, and `tests/basic.test.md` are replaced. Other files are left untouched.
 
 ## Examples
 
