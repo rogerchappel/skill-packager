@@ -4,7 +4,7 @@ import { requireLocalPath } from "../src/safety.js";
 
 const usage = "Usage: skill-packager <init|check> <dir> [--name my-skill] [--force]";
 const args = process.argv.slice(2);
-if (args.includes("--help")) {
+if (args.length === 1 && args[0] === "--help") {
   console.log(usage);
   process.exit(0);
 }

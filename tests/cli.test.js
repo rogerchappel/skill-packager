@@ -10,11 +10,13 @@ function run(...args) {
 }
 
 test("CLI rejects unknown commands without a stack trace", () => {
-  const result = run("frobnicate", "fixtures/valid-skill");
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /Error: unknown command: frobnicate/);
-  assert.match(result.stderr, /Usage:/);
-  assert.doesNotMatch(result.stderr, /\n\s+at /);
+  for (const args of [["frobnicate", "fixtures/valid-skill"], ["frobnicate", "--help"]]) {
+    const result = run(...args);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Error: unknown command: frobnicate/);
+    assert.match(result.stderr, /Usage:/);
+    assert.doesNotMatch(result.stderr, /\n\s+at /);
+  }
 });
 
 test("CLI rejects commands with missing directories without a stack trace", () => {
@@ -24,6 +26,17 @@ test("CLI rejects commands with missing directories without a stack trace", () =
     assert.match(result.stderr, /Error: skill directory is required/);
     assert.doesNotMatch(result.stderr, /\n\s+at /);
   }
+});
+
+test("CLI rejects a missing command while standalone help succeeds", () => {
+  const missing = run();
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /Error: command is required/);
+  assert.doesNotMatch(missing.stderr, /\n\s+at /);
+
+  const help = run("--help");
+  assert.equal(help.status, 0);
+  assert.match(help.stdout, /Usage:/);
 });
 
 test("CLI init refuses existing scaffold files unless --force is passed", () => {
