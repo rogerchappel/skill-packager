@@ -6,7 +6,12 @@ import { join } from "node:path";
 import { scaffoldSkill, validateSkill } from "../src/index.js";
 
 test("valid fixture passes package validation", () => {
-  assert.equal(validateSkill("fixtures/valid-skill").ok, true);
+  assert.deepEqual(validateSkill("fixtures/valid-skill"), {
+    ok: true,
+    missing: [],
+    failures: [],
+    warnings: [],
+  });
 });
 
 test("invalid fixture reports missing package files", () => {
@@ -19,6 +24,63 @@ test("scaffold creates a valid skill", () => {
   const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
   try { assert.equal(scaffoldSkill(dir, "demo-skill").ok, true); }
   finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("required package paths must be regular files", () => {
+  for (const requiredPath of ["SKILL.md", "skill.json", "examples/basic.md", "tests/basic.test.md"]) {
+    const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
+    try {
+      scaffoldSkill(dir, "demo-skill");
+      rmSync(join(dir, requiredPath));
+      mkdirSync(join(dir, requiredPath));
+
+      const result = validateSkill(dir);
+      assert.equal(result.ok, false, requiredPath);
+      assert.deepEqual(result.missing, [], requiredPath);
+      assert.ok(result.failures.some(({ path, code }) => path === requiredPath && code === "not_file"), requiredPath);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+});
+
+test("malformed and non-object manifests return structured failures", () => {
+  const cases = [
+    ["{broken", "invalid_json"],
+    ["null\n", "invalid_manifest"],
+    ["[]\n", "invalid_manifest"],
+  ];
+
+  for (const [manifest, code] of cases) {
+    const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
+    try {
+      scaffoldSkill(dir, "demo-skill");
+      writeFileSync(join(dir, "skill.json"), manifest);
+
+      const result = validateSkill(dir);
+      assert.equal(result.ok, false, manifest);
+      assert.ok(result.failures.some(({ path, code: actual }) => path === "skill.json" && actual === code), manifest);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+});
+
+test("manifest requires the fields produced by the scaffold", () => {
+  const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
+  try {
+    scaffoldSkill(dir, "demo-skill");
+    writeFileSync(join(dir, "skill.json"), "{}\n");
+
+    const result = validateSkill(dir);
+    assert.equal(result.ok, false);
+    assert.deepEqual(
+      result.failures.filter(({ code }) => code === "missing_field").map(({ field }) => field),
+      ["name", "version"],
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("scaffold refuses to overwrite a complete package by default", () => {
