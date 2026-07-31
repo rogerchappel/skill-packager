@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -51,6 +51,25 @@ test("CLI init refuses existing scaffold files unless --force is passed", () => 
     const forced = run("init", dir, "--name", "replacement", "--force");
     assert.equal(forced.status, 0);
     assert.match(readFileSync(join(dir, "SKILL.md"), "utf8"), /^# replacement$/m);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("CLI check prints structured validation failures as JSON", () => {
+  const dir = mkdtempSync(join(tmpdir(), "skill-packager-cli-"));
+  try {
+    execFileSync(process.execPath, ["bin/cli.js", "init", dir, "--name", "demo-skill"]);
+    writeFileSync(join(dir, "skill.json"), "{broken");
+
+    const result = run("check", dir);
+    assert.equal(result.status, 1);
+    assert.equal(result.stderr, "");
+    assert.deepEqual(JSON.parse(result.stdout).failures, [{
+      path: "skill.json",
+      code: "invalid_json",
+      message: "manifest contains invalid JSON",
+    }]);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
