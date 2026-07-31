@@ -26,6 +26,19 @@ skill-packager init ./my-skill --name my-skill --force
 
 Only `SKILL.md`, `skill.json`, `examples/basic.md`, and `tests/basic.test.md` are replaced. Other files are left untouched.
 
+`check` requires those four paths to be readable regular files. It also requires `skill.json` to be a JSON object with non-empty string `name` and `version` fields. Validation failures are printed as JSON in the `failures` array and make the command exit with status 1; invalid packages do not produce filesystem or JSON stack traces.
+
+```json
+{
+  "ok": false,
+  "missing": [],
+  "failures": [
+    { "path": "skill.json", "code": "invalid_json", "message": "manifest contains invalid JSON" }
+  ],
+  "warnings": []
+}
+```
+
 ## Examples
 
 See [examples/basic.md](examples/basic.md) and the fixture-backed tests in [tests/core.test.js](tests/core.test.js).
