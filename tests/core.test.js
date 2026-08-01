@@ -20,6 +20,14 @@ test("invalid fixture reports missing package files", () => {
   assert.ok(result.missing.includes("skill.json"));
 });
 
+test("negated approval fixture fails package validation", () => {
+  const result = validateSkill("fixtures/negated-approval-skill");
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.missing, []);
+  assert.deepEqual(result.failures, []);
+  assert.match(result.warnings[0], /approval requirements/);
+});
+
 test("scaffold creates a valid skill", () => {
   const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
   try { assert.equal(scaffoldSkill(dir, "demo-skill").ok, true); }
@@ -119,21 +127,28 @@ test("scaffold overwrites package files only with force enabled", () => {
   }
 });
 
-test("negated approval language does not satisfy the safety requirement", () => {
-  const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
-  try {
-    mkdirSync(join(dir, "examples"));
-    mkdirSync(join(dir, "tests"));
-    writeFileSync(join(dir, "SKILL.md"), "# Unsafe\n\nNo approval or permission is required.\n");
-    writeFileSync(join(dir, "skill.json"), "{}\n");
-    writeFileSync(join(dir, "examples/basic.md"), "# Example\n");
-    writeFileSync(join(dir, "tests/basic.test.md"), "# Test\n");
+test("approval language distinguishes negations from affirmative guards", () => {
+  const cases = [
+    ["No approval or permission is required.", false],
+    ["Approval is not required before publishing.", false],
+    ["Approval isn't required before publishing.", false],
+    ["Permission isn’t required before publishing.", false],
+    ["Approval is required before publishing.", true],
+    ["Permission is required before publishing.", true],
+    ["Do not publish without explicit approval.", true],
+  ];
 
-    const result = validateSkill(dir);
-    assert.equal(result.ok, false);
-    assert.deepEqual(result.missing, []);
-    assert.match(result.warnings[0], /approval requirements/);
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
+  for (const [statement, expected] of cases) {
+    const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
+    try {
+      scaffoldSkill(dir, "demo-skill");
+      writeFileSync(join(dir, "SKILL.md"), `# Safety\n\n${statement}\n`);
+
+      const result = validateSkill(dir);
+      assert.equal(result.ok, expected, statement);
+      assert.equal(result.warnings.length, expected ? 0 : 1, statement);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   }
 });
