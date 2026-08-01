@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Reject missing, unreadable, and non-file package paths and invalid manifests with structured validation failures.
+- Reject straight- and curly-apostrophe approval negations while preserving affirmative approval guards.
 
 ### Notes
 
