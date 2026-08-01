@@ -74,3 +74,15 @@ test("CLI check prints structured validation failures as JSON", () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("CLI check rejects contracted approval negation", () => {
+  const result = run("check", "fixtures/negated-approval-skill");
+  assert.equal(result.status, 1);
+  assert.equal(result.stderr, "");
+  assert.deepEqual(JSON.parse(result.stdout), {
+    ok: false,
+    missing: [],
+    failures: [],
+    warnings: ["SKILL.md should describe approval requirements"],
+  });
+});
