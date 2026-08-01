@@ -81,10 +81,13 @@ export function validateSkill(dir) {
   const approvalStatements = skillText
     .split(/\r?\n/)
     .filter((line) => /approval|permission/i.test(line));
-  const hasApproval = approvalStatements.some(
-    (line) => /(?:approval|permission).{0,40}\brequir(?:e|es|ed|ing)\b|\brequir(?:e|es|ed|ing)\b.{0,40}(?:approval|permission)/i.test(line)
-      && !/\b(?:no|not|never|without)\b.{0,30}(?:approval|permission)|(?:approval|permission).{0,30}\b(?:not|never)\s+required\b/i.test(line),
-  );
+  const hasApproval = approvalStatements.some((line) => {
+    const normalized = line.replace(/n['’]t\b/gi, " not");
+    const statesRequirement = /(?:approval|permission).{0,40}\brequir(?:e|es|ed|ing)\b|\brequir(?:e|es|ed|ing)\b.{0,40}(?:approval|permission)/i.test(normalized);
+    const negatesRequirement = /\b(?:no|not|never)\b.{0,30}(?:approval|permission)|(?:approval|permission).{0,30}\b(?:not|never)\s+required\b/i.test(normalized);
+    const guardsWithoutApproval = /\b(?:(?:do|must|shall)\s+not|never)\b.{0,60}\bwithout\b.{0,30}(?:approval|permission)\b/i.test(normalized);
+    return (statesRequirement && !negatesRequirement) || guardsWithoutApproval;
+  });
   const warnings = hasApproval ? [] : ["SKILL.md should describe approval requirements"];
   return { ok: failures.length === 0 && warnings.length === 0, missing, failures, warnings };
 }
