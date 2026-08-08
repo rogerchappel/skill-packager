@@ -11,13 +11,18 @@ Use this skill when creating or reviewing an agent skill package that needs a ma
 
 ## Side-Effect Boundaries
 
-This skill reads local files and writes reports only when an output path is provided. It must not call live external APIs, publish content, or mutate third-party systems without explicit approval.
+All commands operate only on the local filesystem. `init <dir>` creates `<dir>` and writes exactly `SKILL.md`, `skill.json`, `examples/basic.md`, and `tests/basic.test.md`.
+
+By default, `init` refuses to run if any of those files already exists. `--force` explicitly authorizes replacing those four scaffold files; it does not delete or overwrite other files in the target directory. `check <dir>` is read-only and never repairs or generates files.
+
+Successful `init` and `check` commands write one JSON validation object to standard output. The CLI does not produce Markdown reports or accept an output-path option. It must not call live external APIs, publish content, or mutate third-party systems without explicit approval.
 
 ## Examples
 
 ```bash
 skill-packager --help
-npm run smoke
+skill-packager init ./my-skill --name my-skill
+skill-packager check ./my-skill
 ```
 
 ## Validation

@@ -16,9 +16,9 @@ skill-packager check ./my-skill
 
 Package agent skills with manifests, examples, tests, and docs so they are reusable instead of loose prompt snippets.
 
-The package is local-first: it reads fixtures or project files and emits deterministic JSON/Markdown output. It does not publish, post, sync, or write to external accounts.
+The package is local-only. `init <dir>` creates the target directory and writes `SKILL.md`, `skill.json`, `examples/basic.md`, and `tests/basic.test.md`. It does not publish, post, sync, or write to external accounts.
 
-`init` will not overwrite any existing scaffold file. If you intentionally want to replace the generated files in an existing package, pass `--force`:
+`init` refuses to run if any scaffold file already exists. If you intentionally want to replace the generated files in an existing package, pass `--force`:
 
 ```bash
 skill-packager init ./my-skill --name my-skill --force
@@ -26,7 +26,9 @@ skill-packager init ./my-skill --name my-skill --force
 
 Only `SKILL.md`, `skill.json`, `examples/basic.md`, and `tests/basic.test.md` are replaced. Other files are left untouched.
 
-`check` requires those four paths to be readable regular files. It also requires `skill.json` to be a JSON object with non-empty string `name` and `version` fields. Validation failures are printed as JSON in the `failures` array and make the command exit with status 1; invalid packages do not produce filesystem or JSON stack traces.
+`check` is read-only: it never repairs or generates files. It requires those four paths to be readable regular files and `skill.json` to be a JSON object with non-empty string `name` and `version` fields.
+
+Both successful commands print one JSON validation object to standard output. There is no Markdown output mode or output-path option. Validation failures are printed as JSON in the `failures` array and make the command exit with status 1; invalid packages do not produce filesystem or JSON stack traces.
 
 ```json
 {
@@ -41,7 +43,7 @@ Only `SKILL.md`, `skill.json`, `examples/basic.md`, and `tests/basic.test.md` ar
 
 ## Examples
 
-See [examples/basic.md](examples/basic.md) and the fixture-backed tests in [tests/core.test.js](tests/core.test.js).
+See [examples/basic.md](examples/basic.md), the fixture-backed tests in [tests/core.test.js](tests/core.test.js), and the executable documentation tests in [tests/cli-docs.test.js](tests/cli-docs.test.js).
 
 ## Limitations
 
