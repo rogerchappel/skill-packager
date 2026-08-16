@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { scaffoldSkill, validateSkill } from "../src/index.js";
@@ -32,6 +32,31 @@ test("scaffold creates a valid skill", () => {
   const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
   try { assert.equal(scaffoldSkill(dir, "demo-skill").ok, true); }
   finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("scaffold rejects blank names before creating the target", () => {
+  const parent = mkdtempSync(join(tmpdir(), "skill-packager-"));
+  const dir = join(parent, "new-skill");
+  try {
+    for (const name of ["", "   ", "\t\n"]) {
+      assert.throws(() => scaffoldSkill(dir, name), /skill name must be a non-empty string/);
+      assert.equal(existsSync(dir), false, JSON.stringify(name));
+    }
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
+});
+
+test("invalid names do not overwrite an existing scaffold even with force", () => {
+  const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
+  try {
+    scaffoldSkill(dir, "original");
+    const original = readFileSync(join(dir, "skill.json"), "utf8");
+    assert.throws(() => scaffoldSkill(dir, " ", { force: true }), /skill name must be a non-empty string/);
+    assert.equal(readFileSync(join(dir, "skill.json"), "utf8"), original);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("required package paths must be regular files", () => {
