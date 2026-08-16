@@ -4,6 +4,10 @@ import { join } from "node:path";
 export const requiredFiles = ["SKILL.md", "skill.json", "examples/basic.md", "tests/basic.test.md"];
 
 export function scaffoldSkill(dir, name = "my-skill", { force = false } = {}) {
+  if (typeof name !== "string" || name.trim() === "") {
+    throw new Error("skill name must be a non-empty string");
+  }
+
   const existing = requiredFiles.filter((file) => existsSync(join(dir, file)));
   if (existing.length > 0 && !force) {
     throw new Error(`refusing to overwrite existing scaffold files: ${existing.join(", ")}; pass force: true to overwrite`);

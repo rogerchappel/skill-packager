@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -53,6 +53,20 @@ test("CLI init refuses existing scaffold files unless --force is passed", () => 
     assert.match(readFileSync(join(dir, "SKILL.md"), "utf8"), /^# replacement$/m);
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("CLI init rejects blank names without creating the target", () => {
+  const parent = mkdtempSync(join(tmpdir(), "skill-packager-cli-"));
+  const dir = join(parent, "new-skill");
+  try {
+    const result = run("init", dir, "--name", "   ");
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Error: skill name must be a non-empty string/);
+    assert.doesNotMatch(result.stderr, /\n\s+at /);
+    assert.equal(existsSync(dir), false);
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
   }
 });
 

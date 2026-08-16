@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Reject blank scaffold names before creating or overwriting package files.
 - Reject missing, unreadable, and non-file package paths and invalid manifests with structured validation failures.
 - Reject straight- and curly-apostrophe approval negations while preserving affirmative approval guards.
 
