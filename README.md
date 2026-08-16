@@ -18,6 +18,8 @@ Package agent skills with manifests, examples, tests, and docs so they are reusa
 
 The package is local-only. `init <dir>` creates the target directory and writes `SKILL.md`, `skill.json`, `examples/basic.md`, and `tests/basic.test.md`. It does not publish, post, sync, or write to external accounts.
 
+The `--name` value must be a non-empty string containing at least one non-whitespace character. Invalid names are rejected before the target directory or any scaffold file is created, including when `--force` is supplied.
+
 `init` refuses to run if any scaffold file already exists. If you intentionally want to replace the generated files in an existing package, pass `--force`:
 
 ```bash

@@ -1,6 +1,6 @@
 # API
 
-- `scaffoldSkill(dir, name, options)`: create a minimal reusable skill package. Existing scaffold files cause an error unless `options.force` is `true`.
+- `scaffoldSkill(dir, name, options)`: create a minimal reusable skill package. `name` must be a non-empty string containing a non-whitespace character and is validated before filesystem writes. Existing scaffold files cause an error unless `options.force` is `true`.
 - `validateSkill(dir)`: check that every required path is a readable regular file, validate the manifest, and check approval language. Validation problems are returned rather than thrown.
 - `requiredFiles`: canonical file list for v1 packages.
 
