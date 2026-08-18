@@ -178,6 +178,29 @@ test("force preflights every destination before replacing scaffold files", () =>
   }
 });
 
+test("force preflights missing destination parents before replacing scaffold files", () => {
+  const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
+  try {
+    scaffoldSkill(dir, "original");
+    rmSync(join(dir, "examples"), { recursive: true });
+    writeFileSync(join(dir, "examples"), "parent blocker\n");
+    const originals = Object.fromEntries(
+      ["SKILL.md", "skill.json", "examples", "tests/basic.test.md"]
+        .map((file) => [file, readFileSync(join(dir, file))]),
+    );
+
+    assert.throws(
+      () => scaffoldSkill(dir, "replacement", { force: true }),
+      /cannot create scaffold path examples\/basic\.md: parent path must be a directory/,
+    );
+    for (const [file, original] of Object.entries(originals)) {
+      assert.deepEqual(readFileSync(join(dir, file)), original, `changed ${file}`);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("approval language distinguishes negations from affirmative guards", () => {
   const cases = [
     ["No approval or permission is required.", false],

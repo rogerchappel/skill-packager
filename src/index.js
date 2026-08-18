@@ -1,12 +1,30 @@
 import { constants, accessSync, existsSync, mkdirSync, writeFileSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 export const requiredFiles = ["SKILL.md", "skill.json", "examples/basic.md", "tests/basic.test.md"];
 
 function preflightScaffold(dir) {
   for (const file of requiredFiles) {
     const path = join(dir, file);
-    if (!existsSync(path)) continue;
+    if (!existsSync(path)) {
+      let parent = dirname(path);
+      while (!existsSync(parent)) parent = dirname(parent);
+      let parentStats;
+      try {
+        parentStats = statSync(parent);
+      } catch {
+        throw new Error(`cannot create scaffold path ${file}: parent path could not be inspected`);
+      }
+      if (!parentStats.isDirectory()) {
+        throw new Error(`cannot create scaffold path ${file}: parent path must be a directory`);
+      }
+      try {
+        accessSync(parent, constants.W_OK);
+      } catch {
+        throw new Error(`cannot create scaffold path ${file}: parent directory is not writable`);
+      }
+      continue;
+    }
 
     let stats;
     try {
