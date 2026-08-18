@@ -27,6 +27,7 @@ skill-packager init ./my-skill --name my-skill --force
 ```
 
 Only `SKILL.md`, `skill.json`, `examples/basic.md`, and `tests/basic.test.md` are replaced. Other files are left untouched.
+Before replacing anything, `--force` verifies that every existing scaffold destination is a writable regular file. If any destination cannot be replaced, `init` exits nonzero with an `Error:` diagnostic and leaves all scaffold files unchanged.
 
 `check` is read-only: it never repairs or generates files. It requires those four paths to be readable regular files and `skill.json` to be a JSON object with non-empty string `name` and `version` fields.
 

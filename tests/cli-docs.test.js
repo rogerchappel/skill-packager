@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 
@@ -63,6 +63,25 @@ test("documented force example overwrites only scaffold files", () => {
     assert.deepEqual(filesBelow(dir), [...scaffoldFiles, "notes.txt"].sort());
     assert.equal(readFileSync(join(dir, "notes.txt"), "utf8"), "preserve me\n");
     assert.match(readFileSync(join(dir, "SKILL.md"), "utf8"), /^# replacement$/m);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("force reports an unusable destination without partially replacing the package", () => {
+  const root = mkdtempSync(join(tmpdir(), "skill-packager-cli-preflight-"));
+  const dir = join(root, "my-skill");
+  try {
+    assert.equal(run("init", dir, "--name", "original").status, 0);
+    rmSync(join(dir, "tests/basic.test.md"));
+    mkdirSync(join(dir, "tests/basic.test.md"));
+    const before = contents(dir);
+
+    const forced = run("init", dir, "--name", "replacement", "--force");
+    assert.notEqual(forced.status, 0);
+    assert.match(forced.stderr, /cannot replace scaffold path tests\/basic\.test\.md: destination must be a regular file/);
+    assert.equal(forced.stdout, "");
+    assert.deepEqual(contents(dir), before);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
