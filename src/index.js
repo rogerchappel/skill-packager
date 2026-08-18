@@ -3,6 +3,28 @@ import { join } from "node:path";
 
 export const requiredFiles = ["SKILL.md", "skill.json", "examples/basic.md", "tests/basic.test.md"];
 
+function preflightScaffold(dir) {
+  for (const file of requiredFiles) {
+    const path = join(dir, file);
+    if (!existsSync(path)) continue;
+
+    let stats;
+    try {
+      stats = statSync(path);
+    } catch {
+      throw new Error(`cannot replace scaffold path ${file}: path could not be inspected`);
+    }
+    if (!stats.isFile()) {
+      throw new Error(`cannot replace scaffold path ${file}: destination must be a regular file`);
+    }
+    try {
+      accessSync(path, constants.W_OK);
+    } catch {
+      throw new Error(`cannot replace scaffold path ${file}: destination is not writable`);
+    }
+  }
+}
+
 export function scaffoldSkill(dir, name = "my-skill", { force = false } = {}) {
   if (typeof name !== "string" || name.trim() === "") {
     throw new Error("skill name must be a non-empty string");
@@ -12,6 +34,8 @@ export function scaffoldSkill(dir, name = "my-skill", { force = false } = {}) {
   if (existing.length > 0 && !force) {
     throw new Error(`refusing to overwrite existing scaffold files: ${existing.join(", ")}; pass force: true to overwrite`);
   }
+
+  preflightScaffold(dir);
 
   mkdirSync(join(dir, "examples"), { recursive: true });
   mkdirSync(join(dir, "tests"), { recursive: true });

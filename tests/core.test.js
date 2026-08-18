@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { scaffoldSkill, validateSkill } from "../src/index.js";
+import { requiredFiles, scaffoldSkill, validateSkill } from "../src/index.js";
 
 test("valid fixture passes package validation", () => {
   assert.deepEqual(validateSkill("fixtures/valid-skill"), {
@@ -149,6 +149,32 @@ test("scaffold overwrites package files only with force enabled", () => {
     assert.match(readFileSync(join(dir, "SKILL.md"), "utf8"), /^# replacement$/m);
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("force preflights every destination before replacing scaffold files", () => {
+  for (const blockedPath of ["SKILL.md", "skill.json", "examples/basic.md", "tests/basic.test.md"]) {
+    const dir = mkdtempSync(join(tmpdir(), "skill-packager-"));
+    try {
+      scaffoldSkill(dir, "original");
+      rmSync(join(dir, blockedPath));
+      mkdirSync(join(dir, blockedPath));
+      const originals = Object.fromEntries(
+        requiredFiles
+          .filter((file) => file !== blockedPath)
+          .map((file) => [file, readFileSync(join(dir, file))]),
+      );
+
+      assert.throws(
+        () => scaffoldSkill(dir, "replacement", { force: true }),
+        new RegExp(`cannot replace scaffold path ${blockedPath.replace(".", "\\.")}: destination must be a regular file`),
+      );
+      for (const [file, original] of Object.entries(originals)) {
+        assert.deepEqual(readFileSync(join(dir, file)), original, `${blockedPath} changed ${file}`);
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   }
 });
 
