@@ -2,6 +2,9 @@
 
 Scaffold and validate reusable agent skill packages.
 
+Development and release checks support Node.js 22 or newer. Install the exact
+committed dependency graph with `npm ci` before running checks.
+
 ## Quickstart
 
 ```bash
@@ -57,6 +60,7 @@ See [examples/basic.md](examples/basic.md), the fixture-backed tests in [tests/c
 ## Verification
 
 ```bash
+npm ci
 npm test
 npm run check
 npm run build
