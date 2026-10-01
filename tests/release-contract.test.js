@@ -12,12 +12,13 @@ test("CI enforces the documented frozen-install contract", async () => {
   const manifest = JSON.parse(packageJson);
 
   assert.equal(manifest.engines.node, ">=22");
-  assert.match(workflow, /node-version: 22/);
+  assert.match(workflow, /node-version: \[22, 24\]/);
+  assert.match(workflow, /node-version: \$\{\{ matrix\.node-version \}\}/);
   assert.match(workflow, /cache: npm/);
   assert.match(workflow, /cache-dependency-path: package-lock\.json/);
   assert.match(workflow, /run: npm ci/);
   assert.doesNotMatch(workflow, /run: npm install/);
-  assert.match(readme, /Node\.js 22 or newer/);
+  assert.match(readme, /Node\.js 22 and 24/);
   assert.match(readme, /npm ci/);
   assert.match(contributing, /Node\.js 22 or newer/);
   assert.match(contributing, /npm ci/);
