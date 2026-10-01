@@ -12,4 +12,4 @@
 
 - [ ] Provider-specific adapters behind dry-run gates
 - [ ] More report renderers
-- [ ] CI matrix once usage stabilizes
+- [x] CI matrix for maintained Node.js LTS versions (22 and 24)
