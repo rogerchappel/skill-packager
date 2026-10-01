@@ -2,8 +2,9 @@
 
 Scaffold and validate reusable agent skill packages.
 
-Development and release checks support Node.js 22 or newer. Install the exact
-committed dependency graph with `npm ci` before running checks.
+Development and release checks support Node.js 22 and 24 (the maintained LTS
+lines covered by CI). Each CI matrix job installs the exact committed
+dependency graph with `npm ci` before running the complete release checks.
 
 ## Quickstart
 
